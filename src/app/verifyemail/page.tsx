@@ -1,54 +1,48 @@
-"use client"
-
-import axios from "axios"
-import Link from "next/link";
-import React, { useEffect, useState } from "react";
+"use client";
+import { useState } from "react";
+import axios from "axios";
 import toast from "react-hot-toast";
 
-export default function VerifyEmailPage() {
-    const [token, setToken] = useState("");
-    const [verified, setVerified] = useState(false);
-    const [error, setError] = useState(false);
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const verifyUserEmail = async () => {
-        try{
-            await axios.post('/api/users/verifyemail', { token })
-            setVerified(true);
-            toast.success("Email verified successfully");
-        }catch(error: any) {
-            console.error("Verification error:", error);
-            console.log(error?.response?.data?.error || error.message || "An error occurred during email verification");
-            setError(true);
-        }
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const res = await axios.post("/api/users/forgot-password", { email });
+      toast.success(res.data.message);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    useEffect(() => {
-        const urlToken = window.location.search.split('=')[1];
-        setToken(urlToken || "");
-    }, [])
-    useEffect(() => {
-        if(token.length > 0) {
-            verifyUserEmail();
-        }
-    }, [token])
-    
-    return(
-        <div className="flex flex-col items-center justify-center min-h-screen py-2">
-            <h1 className="text-4xl">Verify Email</h1>
-            <h2 className="p-2 bg-orange-500 text-black">{token? `${token}`:"no token"}</h2>
-            {verified && (<div>
-                <p className="text-green-500">Email verified successfully!</p>
-            <Link href="/login">Login</Link>
-            </div>
-            )}
-            
-
-            {error && <div> 
-                
-            <p className="text-red-500">Error verifying email. Please try again.</p>
-            
-            </div>}
-
-        </div>
-    )
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-black">
+      <h1 className="text-white text-xl mb-4">Forgot Password</h1>
+      <form
+        onSubmit={handleForgotPassword}
+        className="flex flex-col gap-3 w-64"
+      >
+        <input
+          type="email"
+          placeholder="Enter your email"
+          className="p-2 rounded border border-gray-300"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+          disabled={loading}
+        >
+          {loading ? "Sending..." : "Send Reset Link"}
+        </button>
+      </form>
+    </div>
+  );
 }
